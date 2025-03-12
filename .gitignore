@@ -172,3 +172,10 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# Personal Assistant specific
+credentials/
+credentials.json
+token.json
+token.pickle
+data/*.json

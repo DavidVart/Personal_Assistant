@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Web Assistant</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        #chat-container {
+            border: 1px solid #ccc;
+            padding: 20px;
+            height: 300px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+        .user-message {
+            text-align: right;
+            margin-bottom: 10px;
+        }
+        .assistant-message {
+            text-align: left;
+            margin-bottom: 10px;
+        }
+        .user-bubble {
+            background-color: #007bff;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 15px;
+            display: inline-block;
+            max-width: 80%;
+        }
+        .assistant-bubble {
+            background-color: #f1f1f1;
+            padding: 8px 12px;
+            border-radius: 15px;
+            display: inline-block;
+            max-width: 80%;
+        }
+        #message-form {
+            display: flex;
+        }
+        #message-input {
+            flex-grow: 1;
+            padding: 8px;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Simple Web Assistant</h1>
+    <div id="chat-container">
+        <div class="assistant-message">
+            <div class="assistant-bubble">Hello! I'm a simple web assistant for debugging. How can I help you?</div>
+        </div>
+    </div>
+    <form id="message-form">
+        <input type="text" id="message-input" placeholder="Type your message here...">
+        <button type="submit">Send</button>
+    </form>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const messageForm = document.getElementById('message-form');
+            const messageInput = document.getElementById('message-input');
+            const chatContainer = document.getElementById('chat-container');
+
+            messageForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const message = messageInput.value.trim();
+                if (!message) return;
+                
+                // Add user message to chat
+                addMessage(message, true);
+                messageInput.value = '';
+                
+                try {
+                    // Add loading message
+                    const loadingId = addLoadingMessage();
+                    
+                    // Send message to server
+                    const response = await fetch('/api/chat', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ message })
+                    });
+                    
+                    // Remove loading message
+                    removeLoadingMessage(loadingId);
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        addMessage(data.response, false);
+                    } else {
+                        const errorData = await response.json();
+                        addMessage(`Error: ${errorData.response}`, false);
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    addMessage(`Error: ${error.message}`, false);
+                }
+            });
+            
+            function addMessage(text, isUser) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = isUser ? 'user-message' : 'assistant-message';
+                
+                const bubble = document.createElement('div');
+                bubble.className = isUser ? 'user-bubble' : 'assistant-bubble';
+                bubble.textContent = text;
+                
+                messageDiv.appendChild(bubble);
+                chatContainer.appendChild(messageDiv);
+                
+                // Scroll to bottom
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }
+            
+            function addLoadingMessage() {
+                const id = 'loading-' + Date.now();
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'assistant-message';
+                messageDiv.id = id;
+                
+                const bubble = document.createElement('div');
+                bubble.className = 'assistant-bubble';
+                bubble.textContent = 'Thinking...';
+                
+                messageDiv.appendChild(bubble);
+                chatContainer.appendChild(messageDiv);
+                
+                // Scroll to bottom
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+                
+                return id;
+            }
+            
+            function removeLoadingMessage(id) {
+                const loadingMessage = document.getElementById(id);
+                if (loadingMessage) {
+                    chatContainer.removeChild(loadingMessage);
+                }
+            }
+        });
+    </script>
+</body>
+</html> 

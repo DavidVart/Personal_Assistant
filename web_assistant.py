@@ -122,7 +122,7 @@ def list_events(date: Optional[str] = None):
     return result
 
 @function_tool
-def add_todo(task: str, priority: str = "medium", due_date: Optional[str] = None):
+def add_todo(task: str, priority: Optional[str] = None, due_date: Optional[str] = None):
     """
     Add a task to the to-do list.
     
@@ -134,6 +134,10 @@ def add_todo(task: str, priority: str = "medium", due_date: Optional[str] = None
     Returns:
         A confirmation message
     """
+    # Use medium as the default priority if none is provided
+    if priority is None:
+        priority = "medium"
+    
     # Validate priority
     if priority.lower() not in ["low", "medium", "high"]:
         return f"Error: Priority must be 'low', 'medium', or 'high'. Got '{priority}'."
@@ -323,8 +327,9 @@ def get_current_time():
 assistant = Agent(
     name="Web Personal Assistant",
     instructions="""
-    You are a helpful personal assistant that can help with scheduling events, managing to-do lists, 
-    taking notes, and answering questions. You should be polite, helpful, and concise in your responses.
+    You are a helpful personal assistant with a web interface that can help with scheduling events, 
+    managing to-do lists, taking notes, and answering questions. You should be polite, helpful, 
+    and concise in your responses.
     
     When scheduling events, ask for the date, time, and event description if not provided.
     When adding tasks to the to-do list, ask for the task description and priority if not provided.
@@ -686,7 +691,9 @@ def chat():
         result = Runner.run_sync(assistant, user_message)
         return jsonify({'response': result.final_output})
     except Exception as e:
-        print(f"Error: {str(e)}")
+        print(f"Error processing message: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'response': f"I'm sorry, I encountered an error: {str(e)}"}), 500
 
 # Run the app

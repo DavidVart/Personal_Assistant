@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Assistant</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .debug-panel {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            display: none;
+        }
+        .debug-panel h3 {
+            margin-top: 0;
+        }
+        .debug-toggle {
+            margin-top: 10px;
+            font-size: 12px;
+            color: #666;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Personal Assistant</h1>
+        </header>
+        
+        <div class="chat-container">
+            <div id="chat-messages" class="chat-messages">
+                <div class="message assistant">
+                    <div class="message-content">
+                        Hello! I'm your personal assistant. How can I help you today?
+                    </div>
+                </div>
+            </div>
+            
+            <div class="chat-input">
+                <form id="message-form">
+                    <input type="text" id="user-input" placeholder="Type your message here..." autocomplete="off">
+                    <button type="submit">Send</button>
+                </form>
+            </div>
+        </div>
+        
+        <div class="examples">
+            <h3>Examples:</h3>
+            <ul>
+                <li><a href="#" class="example-link">Schedule a meeting with John on Friday at 2pm</a></li>
+                <li><a href="#" class="example-link">What events do I have scheduled for tomorrow?</a></li>
+                <li><a href="#" class="example-link">Add 'Buy groceries' to my to-do list with high priority</a></li>
+                <li><a href="#" class="example-link">Show me my to-do list</a></li>
+                <li><a href="#" class="example-link">Take a note about the project meeting</a></li>
+            </ul>
+        </div>
+        
+        <div class="debug-toggle" onclick="toggleDebug()">Show Debug Panel</div>
+        
+        <div id="debug-panel" class="debug-panel">
+            <h3>Debug Information</h3>
+            <div>
+                <button onclick="listEvents()">List All Events</button>
+                <button onclick="clearEvents()">Clear All Events</button>
+                <button onclick="checkGoogleCalendarStatus()">Check Google Calendar</button>
+                <button onclick="resetGoogleAuth()">Reset Google Auth</button>
+                <button onclick="listConversations()">List Conversations</button>
+            </div>
+            <pre id="debug-output"></pre>
+        </div>
+    </div>
+    
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script>
+        function toggleDebug() {
+            const panel = document.getElementById('debug-panel');
+            const toggle = document.querySelector('.debug-toggle');
+            if (panel.style.display === 'block') {
+                panel.style.display = 'none';
+                toggle.textContent = 'Show Debug Panel';
+            } else {
+                panel.style.display = 'block';
+                toggle.textContent = 'Hide Debug Panel';
+            }
+        }
+        
+        async function listEvents() {
+            try {
+                const response = await fetch('/api/debug/events');
+                const data = await response.json();
+                document.getElementById('debug-output').textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                document.getElementById('debug-output').textContent = 'Error: ' + error.message;
+            }
+        }
+        
+        async function clearEvents() {
+            try {
+                const response = await fetch('/api/debug/clear-events', { method: 'POST' });
+                const data = await response.json();
+                document.getElementById('debug-output').textContent = JSON.stringify(data, null, 2);
+                alert('All events cleared');
+            } catch (error) {
+                document.getElementById('debug-output').textContent = 'Error: ' + error.message;
+            }
+        }
+        
+        async function checkGoogleCalendarStatus() {
+            try {
+                const response = await fetch('/api/debug/google-calendar-status');
+                const data = await response.json();
+                document.getElementById('debug-output').textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                document.getElementById('debug-output').textContent = 'Error: ' + error.message;
+            }
+        }
+        
+        async function resetGoogleAuth() {
+            if (confirm('Are you sure you want to reset Google Calendar authentication? You will need to re-authenticate.')) {
+                try {
+                    const response = await fetch('/api/debug/reset-google-auth', { method: 'POST' });
+                    const data = await response.json();
+                    document.getElementById('debug-output').textContent = JSON.stringify(data, null, 2);
+                    alert(data.message);
+                } catch (error) {
+                    document.getElementById('debug-output').textContent = 'Error: ' + error.message;
+                }
+            }
+        }
+        
+        async function listConversations() {
+            try {
+                const response = await fetch('/api/debug/conversations');
+                const data = await response.json();
+                document.getElementById('debug-output').textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                document.getElementById('debug-output').textContent = 'Error: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>
+    

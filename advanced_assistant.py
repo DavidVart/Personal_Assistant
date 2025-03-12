@@ -122,7 +122,7 @@ def list_events(date: Optional[str] = None):
     return result
 
 @function_tool
-def add_todo(task: str, priority: str = "medium", due_date: Optional[str] = None):
+def add_todo(task: str, priority: Optional[str] = None, due_date: Optional[str] = None):
     """
     Add a task to the to-do list.
     
@@ -134,6 +134,10 @@ def add_todo(task: str, priority: str = "medium", due_date: Optional[str] = None
     Returns:
         A confirmation message
     """
+    # Use medium as the default priority if none is provided
+    if priority is None:
+        priority = "medium"
+    
     # Validate priority
     if priority.lower() not in ["low", "medium", "high"]:
         return f"Error: Priority must be 'low', 'medium', or 'high'. Got '{priority}'."

@@ -2,6 +2,7 @@ import os
 import datetime
 from dotenv import load_dotenv
 from agents import Agent, Runner, function_tool
+from typing import Optional
 
 # Load environment variables from .env file
 load_dotenv()
@@ -35,7 +36,58 @@ def schedule_event(date: str, time: str, event: str):
         return f"Error: {str(e)}. Please provide date in YYYY-MM-DD format and time in HH:MM format."
 
 @function_tool
-def add_todo(task: str, priority: str = "medium"):
+def get_date_info(days_offset: int = 0):
+    """
+    Get information about a specific date relative to today.
+    
+    Args:
+        days_offset: Number of days from today (0 = today, 1 = tomorrow, -1 = yesterday)
+    
+    Returns:
+        Information about the date
+    """
+    target_date = datetime.datetime.now() + datetime.timedelta(days=days_offset)
+    
+    if days_offset == 0:
+        day_name = "Today"
+    elif days_offset == 1:
+        day_name = "Tomorrow"
+    elif days_offset == -1:
+        day_name = "Yesterday"
+    else:
+        day_name = target_date.strftime("%A")
+    
+    return {
+        "date_string": target_date.strftime("%Y-%m-%d"),
+        "formatted_date": target_date.strftime("%A, %B %d, %Y"),
+        "day_name": day_name,
+        "day_of_week": target_date.strftime("%A"),
+        "month": target_date.strftime("%B"),
+        "day": target_date.day,
+        "year": target_date.year
+    }
+
+@function_tool
+def explain_calendar_capabilities():
+    """
+    Explain the calendar capabilities of the basic assistant.
+    
+    Returns:
+        An explanation of calendar capabilities
+    """
+    return """
+    In the basic assistant mode, I can help you schedule events, but I don't have access to your actual calendar.
+    
+    The events you schedule with me are not integrated with any external calendar service like Google Calendar.
+    
+    If you need actual calendar integration, please use the integrated assistant mode:
+    ./run.py --mode integrated
+    
+    The integrated mode connects with Google Calendar and provides real calendar management.
+    """
+
+@function_tool
+def add_todo(task: str, priority: Optional[str] = None):
     """
     Add a task to the to-do list.
     
@@ -46,6 +98,10 @@ def add_todo(task: str, priority: str = "medium"):
     Returns:
         A confirmation message
     """
+    # Use medium as the default priority if none is provided
+    if priority is None:
+        priority = "medium"
+    
     # Here you would integrate with a to-do list API or database
     return f"Added task '{task}' with {priority} priority to your to-do list."
 
@@ -71,8 +127,15 @@ assistant = Agent(
     When adding tasks to the to-do list, ask for the task description and priority if not provided.
     
     Always confirm actions with the user and provide helpful feedback.
+    
+    Important notes about calendar functionality:
+    - In basic mode, you can schedule events but they are not connected to any real calendar system
+    - If the user asks about their calendar or events, explain that the basic assistant doesn't have access to their actual calendar
+    - Suggest using the integrated assistant mode for real calendar integration
+    
+    You have access to the current date and time, and can provide information about dates (today, tomorrow, etc.).
     """,
-    tools=[schedule_event, add_todo, get_current_time]
+    tools=[schedule_event, get_date_info, explain_calendar_capabilities, add_todo, get_current_time]
 )
 
 # Run the assistant
